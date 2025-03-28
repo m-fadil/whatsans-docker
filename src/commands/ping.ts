@@ -1,11 +1,13 @@
-import { IFeature, IParams } from "../types/type";
+import { ICommand, IParams } from "../types/type";
 
-const Ping: IFeature = {
+const Ping: ICommand = {
   name: "ping",
   desc: "Ping the bot",
   alias: ["p"],
   usage: ["ping"],
-  execute: async ({ sock, remoteJid }: IParams) => {
-    await sock.sendMessage(remoteJid, { text: "Pong!" });
+  execute: async ({ sendMessage }: IParams) => {
+    await sendMessage("Pong!");
   }
 }
+
+export default Ping;

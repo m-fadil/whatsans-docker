@@ -4,84 +4,111 @@ import {
 	BufferJSON,
 	initAuthCreds,
 	proto,
-	SignalDataSet,
 	SignalDataTypeMap,
 } from "baileys";
 import { PrismaClient } from "@prisma/client";
+import logger from "./logger";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 const prisma = new PrismaClient();
-const sessionId = "default";
+const fixId = (id: string) => id.replace(/\//g, "__").replace(/:/g, "-");
+const model = prisma.authSessions;
 
-const useAuth = async () => {
-	const getCreds = async (): Promise<AuthenticationCreds> => {
-		const session = await prisma.authCreds.findUnique({
-			where: { sessionId },
-		});
+const useSessions = async (
+	sessionId: string
+): Promise<{
+	state: AuthenticationState;
+	saveCreds: () => Promise<void>;
+}> => {
+	const read = async (id: string) => {
+		try {
+			const result = await model.findUnique({
+				select: { data: true },
+				where: { sessionId_id: { id: fixId(id), sessionId } },
+			});
 
-		const creds = session ? (JSON.parse(session.creds, BufferJSON.reviver) as AuthenticationCreds) : initAuthCreds();
+			if (!result) {
+				logger.info({ id }, "Trying to read non existent session data");
+				return null;
+			}
 
-		return creds;
+			return JSON.parse(result.data, BufferJSON.reviver);
+		} catch (e) {
+			if (e instanceof PrismaClientKnownRequestError && e.code === "P2025") {
+				logger.info({ id }, "Trying to read non existent session data");
+			} else {
+				logger.error(e, "An error occured during session read");
+			}
+			return null;
+		}
 	};
 
-	const creds = await getCreds();
+	const write = async (data: any, id: string) => {
+		try {
+			data = JSON.stringify(data, BufferJSON.replacer);
+			id = fixId(id);
+			await model.upsert({
+				select: { pkId: true },
+				create: { data, id, sessionId },
+				update: { data },
+				where: { sessionId_id: { id, sessionId } },
+			});
+		} catch (e) {
+			logger.error(e, "An error occured during session write");
+		}
+	};
 
-	const state: AuthenticationState = {
-		creds,
-		keys: {
-			async get<T extends keyof SignalDataTypeMap>(type: T, ids: string[]) {
-				const keys = await prisma.signalKey.findMany({
-					where: { type, id: { in: ids } },
-				});
+	const del = async (id: string) => {
+		try {
+			await model.delete({
+				select: { pkId: true },
+				where: { sessionId_id: { id: fixId(id), sessionId } },
+			});
+		} catch (e) {
+			logger.error(e, "An error occured during session delete");
+		}
+	};
 
-				return Object.fromEntries(
-					keys.map((k) => {
-						try {
-							if (type === "app-state-sync-key" && k.data) {
-								return [k.id, proto.Message.AppStateSyncKeyData.fromObject(JSON.parse(k.data, BufferJSON.reviver))];
+	const creds: AuthenticationCreds = (await read("creds")) || initAuthCreds();
+
+	return {
+		state: {
+			creds,
+			keys: {
+				get: async <T extends keyof SignalDataTypeMap>(
+					type: T,
+					ids: string[]
+				): Promise<{
+					[id: string]: SignalDataTypeMap[T];
+				}> => {
+					const data: { [key: string]: SignalDataTypeMap[typeof type] } = {};
+					await Promise.all(
+						ids.map(async (id) => {
+							let value = await read(`${type}-${id}`);
+							if (type === "app-state-sync-key" && value) {
+								value = proto.Message.AppStateSyncKeyData.fromObject(value);
 							}
-
-							return [k.id, JSON.parse(k.data, BufferJSON.reviver) as SignalDataTypeMap[T]];
-						} catch (error) {
-							console.error(`Failed to parse key ${k.id}:`, error);
-							return [k.id, {} as SignalDataTypeMap[T]];
-						}
-					})
-				);
-			},
-			async set(data: SignalDataSet) {
-				const entries = Object.entries(data).flatMap(([type, values]) =>
-					Object.entries(values).map(([id, value]) => ({
-						type,
-						id,
-						data: JSON.stringify(value, BufferJSON.replacer),
-					}))
-				);
-
-				await prisma.$transaction(
-					entries.map((entry) =>
-						prisma.signalKey.upsert({
-							where: { id: entry.id, type: entry.type },
-							update: { data: entry.data },
-							create: { ...entry },
+							data[id] = value;
 						})
-					)
-				);
-			},
-			async clear() {
-				await prisma.signalKey.deleteMany({});
+					);
+					return data;
+				},
+				set: async (data: any): Promise<void> => {
+					const tasks: Promise<void>[] = [];
+
+					for (const category in data) {
+						for (const id in data[category]) {
+							const value = data[category][id];
+							const sId = `${category}-${id}`;
+							tasks.push(value ? write(value, sId) : del(sId));
+						}
+					}
+					await Promise.all(tasks);
+				},
 			},
 		},
+		saveCreds: () => write(creds, "creds"),
 	};
-
-	const saveCreds = async (): Promise<void> => {
-		await prisma.authCreds.upsert({
-			where: { sessionId: sessionId },
-			update: { creds: JSON.stringify(creds, BufferJSON.replacer) },
-			create: { sessionId, creds: JSON.stringify(creds, BufferJSON.replacer) },
-		});
-	};
-
-	return { state, saveCreds };
 };
 
-export { useAuth };
+export { useSessions };

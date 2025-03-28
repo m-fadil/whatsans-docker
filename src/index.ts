@@ -1,17 +1,13 @@
-import makeWASocket, {
-	DisconnectReason,
-	fetchLatestBaileysVersion,
-	makeCacheableSignalKeyStore,
-	useMultiFileAuthState,
-} from "baileys";
+import makeWASocket, { DisconnectReason, fetchLatestBaileysVersion, makeCacheableSignalKeyStore } from "baileys";
 import { Boom } from "@hapi/boom";
 import QRCode from "qrcode";
-import { useAuth } from "./utils/auth";
+import { useSessions } from "./utils/auth";
 import logger from "./utils/logger";
 import { MessageHandler } from "./handlers/message.handler";
+import { commandHandler } from "./handlers/command.handler";
 
 const startSock = async () => {
-	const { state, saveCreds } = await useAuth();
+	const { state, saveCreds } = await useSessions("default");
 	const { version, isLatest } = await fetchLatestBaileysVersion();
 	console.log(`using WA v${version.join(".")}, isLatest: ${isLatest}`);
 
@@ -20,7 +16,7 @@ const startSock = async () => {
 			creds: state.creds,
 			keys: makeCacheableSignalKeyStore(state.keys, logger),
 		},
-		logger
+		logger,
 	});
 
 	sock.ev.on("connection.update", async (update) => {
@@ -53,7 +49,7 @@ const startSock = async () => {
 					throw new Error("Invalid remoteJid");
 				}
 
-				await MessageHandler(sock, messages[0])
+				await MessageHandler(sock, messages[0]);
 			} catch (err) {
 				console.log(err);
 			}

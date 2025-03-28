@@ -13,18 +13,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model AuthCreds {
-  id        Int    @id @default(autoincrement())
-  sessionId String @unique
-  creds String @db.Text
+model AuthSessions {
+  pkId      Int    @id @default(autoincrement())
+  sessionId String @db.VarChar(128)
+  id        String @db.VarChar(255)
+  data      String @db.Text
 
-  @@map("auth_creds")
-}
-
-model SignalKey {
-  id      String  @id
-  type    String  @db.VarChar(255)
-  data    String @db.Text
-
-  @@map("signal_key")
+  @@unique([sessionId, id])
 }
