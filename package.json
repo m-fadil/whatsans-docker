@@ -4,7 +4,9 @@
   "main": "index.js",
   "scripts": {
     "build": "swc src --out-dir dist --strip-leading-paths",
-    "dev": "nodemon --watch src -e ts --exec \"npm run build && node dist/index.js\""
+    "dev": "nodemon --watch src -e ts --exec \"npm run build && node dist/index.js\"",
+    "lint:check": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix"
   },
   "author": "",
   "license": "ISC",
@@ -19,16 +21,19 @@
     "mysql2": "^3.14.0",
     "prisma": "^6.5.0",
     "qrcode": "^1.5.4",
-    "typescript": "^5.8.2",
     "yargs-parser": "^21.1.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.23.0",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.11.13",
     "@types/chance": "^1.1.6",
     "@types/qrcode": "^1.5.5",
     "@types/yargs-parser": "^21.0.3",
+    "eslint": "^8.57.1",
     "nodemon": "^3.1.9",
-    "prettier": "^3.5.3"
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0"
   }
 }

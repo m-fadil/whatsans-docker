@@ -8,7 +8,6 @@ import QRCode from "qrcode";
 import { useSessions } from "./utils/auth";
 import logger from "./utils/logger";
 import { MessageHandler } from "./handlers/message.handler";
-import { commandHandler } from "./handlers/commands.handler";
 
 const startSock = async () => {
   const { state, saveCreds } = await useSessions("default");

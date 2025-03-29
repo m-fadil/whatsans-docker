@@ -1,4 +1,4 @@
-import { AnyMessageContent, MiscMessageGenerationOptions, proto, WASocket } from "baileys";
+import { AnyMessageContent, MiscMessageGenerationOptions, WASocket } from "baileys";
 import { Arguments } from "yargs-parser";
 
 export type ReactionType = "ok" | "bad" | "warn" | "stop" | "cross" | "check" | "EQ";

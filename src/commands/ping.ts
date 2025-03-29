@@ -5,7 +5,7 @@ const Ping: ICommand = {
   desc: "Ping the bot",
   alias: ["p"],
   usage: ["ping"],
-  execute: async ({ sendMessage, reaction }: IParams) => {
+  execute: async ({ sendMessage }: IParams) => {
     await sendMessage("pong!", { isQuoted: true });
   },
 };

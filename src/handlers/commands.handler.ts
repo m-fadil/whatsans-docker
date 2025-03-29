@@ -2,8 +2,8 @@ import { readdir } from "fs/promises";
 import { ICommand } from "../types/type";
 
 export async function commandsHandler(): Promise<{
-  commandsMap: Map<string, ICommand>,
-  commands: Array<ICommand>
+  commandsMap: Map<string, ICommand>;
+  commands: Array<ICommand>;
 }> {
   const files = await readdir(`./dist/commands`).then((cb) =>
     cb.filter((file) => file.endsWith(".js")),

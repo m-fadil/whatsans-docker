@@ -15,14 +15,16 @@ export async function MessageHandler(sock: WASocket, m: WAMessage) {
 
   const inMessage = incomingMessage.substring(process.env.COMMAND_PREFIX!.length);
   const args = parser(inMessage);
-	const [inCommand] = args._.splice(0, 1) as string[];
+  const params = paramsHandler(sock, m, args);
+
+  const [inCommand] = args._.splice(0, 1) as string[];
   await sock.readMessages([m.key]);
 
-  const {commandsMap, commands} = await commandsHandler();
-  const command =
-    commandsMap.get(args[0]) || commands.find((c) => c.alias?.includes(inCommand));
+  const { commandsMap, commands } = await commandsHandler();
+  const command = commandsMap.get(inCommand) || commands.find((c) => c.alias?.includes(inCommand));
 
-  if (!command) return;
+  console.log(commandsMap);
+  if (!command) return await params.sendMessage("Command not found", { isQuoted: true });
 
-  await command.execute(paramsHandler(sock, m, args));
+  await command.execute(params);
 }

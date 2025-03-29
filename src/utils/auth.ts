@@ -4,6 +4,7 @@ import {
   BufferJSON,
   initAuthCreds,
   proto,
+  SignalDataSet,
   SignalDataTypeMap,
 } from "baileys";
 import { PrismaClient } from "@prisma/client";
@@ -43,9 +44,9 @@ const useSessions = async (
     }
   };
 
-  const write = async (data: any, id: string) => {
+  const write = async <T>(d: T, id: string) => {
     try {
-      data = JSON.stringify(data, BufferJSON.replacer);
+      const data = JSON.stringify(d, BufferJSON.replacer);
       id = fixId(id);
       await model.upsert({
         select: { pkId: true },
@@ -93,12 +94,12 @@ const useSessions = async (
           );
           return data;
         },
-        set: async (data: any): Promise<void> => {
+        set: async (data: SignalDataSet): Promise<void> => {
           const tasks: Promise<void>[] = [];
 
           for (const category in data) {
-            for (const id in data[category]) {
-              const value = data[category][id];
+            for (const id in data[category as keyof SignalDataTypeMap]) {
+              const value = data[category as keyof SignalDataTypeMap]?.[id];
               const sId = `${category}-${id}`;
               tasks.push(value ? write(value, sId) : del(sId));
             }

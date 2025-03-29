@@ -20,6 +20,7 @@ export function paramsHandler(sock: WASocket, m: WAMessage, args: Arguments): IP
       quoted: opts?.isQuoted ? m : undefined,
       ...opts,
     };
+    void isQuoted;
 
     await sock.presenceSubscribe(remoteJid);
     await sock.sendPresenceUpdate("composing", remoteJid);
@@ -57,6 +58,6 @@ export function paramsHandler(sock: WASocket, m: WAMessage, args: Arguments): IP
     fromGroup,
     sendMessage,
     reaction,
-    args
+    args,
   };
 }
