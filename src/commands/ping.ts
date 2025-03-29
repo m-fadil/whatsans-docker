@@ -5,9 +5,9 @@ const Ping: ICommand = {
   desc: "Ping the bot",
   alias: ["p"],
   usage: ["ping"],
-  execute: async ({ sendMessage }: IParams) => {
-    await sendMessage("Pong!");
-  }
-}
+  execute: async ({ sendMessage, reaction }: IParams) => {
+    await sendMessage("pong!", { isQuoted: true });
+  },
+};
 
 export default Ping;

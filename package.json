@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "swc src --out-dir dist --strip-leading-paths",
     "dev": "nodemon --watch src -e ts --exec \"npm run build && node dist/index.js\""
   },
@@ -13,17 +12,23 @@
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@prisma/client": "^6.5.0",
-    "@types/qrcode": "^1.5.5",
     "baileys": "^6.7.16",
+    "chance": "^1.1.12",
+    "cliui": "^8.0.1",
     "dotenv": "^16.4.7",
     "mysql2": "^3.14.0",
     "prisma": "^6.5.0",
     "qrcode": "^1.5.4",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "yargs-parser": "^21.1.1"
   },
   "devDependencies": {
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.11.13",
-    "nodemon": "^3.1.9"
+    "@types/chance": "^1.1.6",
+    "@types/qrcode": "^1.5.5",
+    "@types/yargs-parser": "^21.0.3",
+    "nodemon": "^3.1.9",
+    "prettier": "^3.5.3"
   }
 }

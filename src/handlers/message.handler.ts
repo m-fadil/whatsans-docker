@@ -1,6 +1,7 @@
 import { WAMessage, WASocket } from "baileys";
-import { commandHandler } from "./command.handler";
+import { commandsHandler } from "./commands.handler";
 import { paramsHandler } from "./params.handler";
+import parser from "yargs-parser";
 
 export async function MessageHandler(sock: WASocket, m: WAMessage) {
   const incomingMessage =
@@ -13,13 +14,15 @@ export async function MessageHandler(sock: WASocket, m: WAMessage) {
   if (!incomingMessage.startsWith(process.env.COMMAND_PREFIX!)) return;
 
   const inMessage = incomingMessage.substring(process.env.COMMAND_PREFIX!.length);
-  const inArgs = inMessage.split(" ");
+  const args = parser(inMessage);
+	const [inCommand] = args._.splice(0, 1) as string[];
   await sock.readMessages([m.key]);
 
-  const commnads = await commandHandler();
-  const command = commnads.get(inArgs[0]);
+  const {commandsMap, commands} = await commandsHandler();
+  const command =
+    commandsMap.get(args[0]) || commands.find((c) => c.alias?.includes(inCommand));
 
   if (!command) return;
 
-  await command.execute(paramsHandler(sock, m));
+  await command.execute(paramsHandler(sock, m, args));
 }

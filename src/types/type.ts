@@ -1,9 +1,23 @@
-import { proto, WASocket } from "baileys";
+import { AnyMessageContent, MiscMessageGenerationOptions, proto, WASocket } from "baileys";
+import { Arguments } from "yargs-parser";
+
+export type ReactionType = "ok" | "bad" | "warn" | "stop" | "cross" | "check" | "EQ";
+
+export interface CustMiscMessageGenerationOptions extends MiscMessageGenerationOptions {
+  isQuoted?: boolean;
+}
 
 export interface IParams {
   sock: WASocket;
   remoteJid: string;
-  sendMessage: (message: string) => Promise<proto.WebMessageInfo | undefined>
+  sender: string;
+  fromGroup: boolean;
+  sendMessage: (
+    message: AnyMessageContent | string,
+    opts?: CustMiscMessageGenerationOptions,
+  ) => Promise<void>;
+  reaction: (type?: ReactionType) => Promise<void>;
+  args: Arguments;
 }
 
 export interface ICommand {
