@@ -1,6 +1,7 @@
 import { WAMessage, WASocket } from "baileys";
 import { commandsHandler } from "./commands.handler";
 import { paramsHandler } from "./params.handler";
+import { exceptionsHandler } from "./exceptions.handler";
 import parser from "yargs-parser";
 
 export async function MessageHandler(sock: WASocket, m: WAMessage) {
@@ -25,5 +26,10 @@ export async function MessageHandler(sock: WASocket, m: WAMessage) {
 
   if (!command) return await params.sendMessage("Command not found", { isQuoted: true });
 
-  await command.execute(params);
+  try {
+    await command.execute(params);
+  }
+  catch (error) {
+    await exceptionsHandler(error, params);
+  }
 }
