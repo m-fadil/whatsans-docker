@@ -1,0 +1,47 @@
+services:
+  app:
+    image: node:22.17-alpine
+    # ports:
+    #   - "3000:3000"
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    working_dir: /app
+    command: sleep infinity
+
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: fadlz123
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: always
+  
+  cobalt:
+    image: ghcr.io/imputnet/cobalt:11
+    init: true
+    read_only: true
+    restart: unless-stopped
+    # ports:
+    #   - 9000:9000/tcp
+    environment:
+      API_URL: "http://127.0.0.1:9000"
+      COBALT_API_KEY: ${COBALT_API_KEY}
+    labels:
+      - com.centurylinklabs.watchtower.scope=cobalt
+
+  watchtower:
+    image: ghcr.io/containrrr/watchtower
+    restart: unless-stopped
+    command: --cleanup --scope cobalt --interval 900 --include-restarting
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  db-data:
+  node_modules:

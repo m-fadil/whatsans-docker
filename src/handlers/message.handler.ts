@@ -23,7 +23,6 @@ export async function MessageHandler(sock: WASocket, m: WAMessage) {
   const { commandsMap, commands } = await commandsHandler();
   const command = commandsMap.get(inCommand) || commands.find((c) => c.alias?.includes(inCommand));
 
-  console.log(commandsMap);
   if (!command) return await params.sendMessage("Command not found", { isQuoted: true });
 
   await command.execute(params);

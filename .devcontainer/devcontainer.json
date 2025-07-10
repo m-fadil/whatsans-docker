@@ -1,0 +1,15 @@
+{
+  "name": "Whatsans",
+  "customizations": {
+    "vscode": {
+      "extensions": [],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "sh",
+        "debug.node.autoAttach": "disabled"
+      }
+    }
+  },
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/app"
+}
